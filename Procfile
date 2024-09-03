@@ -1,3 +1,3 @@
-web: python GitHub/bot_test1/app.py
+web: python bot_test1/app.py
 
 
