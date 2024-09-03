@@ -8,6 +8,7 @@ from flask import Flask, request
 import requests
 from dotenv import load_dotenv
 import os
+import logging
 
 
 # In[13]:
@@ -36,6 +37,7 @@ print(DUNE_QUERY_ID)
 @app.route('/webhook', methods=['POST'])
 def webhook():
     data = request.json
+    logging.info("Incoming request: %s", data)  # Log incoming requests
     chat_id = data['message']['chat']['id']
     user_input = data['message']['text']
 
@@ -49,13 +51,15 @@ def webhook():
     query_url = f'https://api.dune.com/api/v1/query/{DUNE_QUERY_ID}/execute'
     headers = {'x-dune-api-key': DUNE_API_KEY}
     response = requests.post(query_url, headers=headers, json={"parameters": {"input": user_input}})
-    result = response.json()
+
 
     # Send result back to Telegram
     if response.status_code == 200:
         result = response.json()
+        logging.info("Dune Analytics response: %s", result)  # Log Dune Analytics response
         send_message(chat_id, result['data'])
     else:
+        logging.error("Failed to retrieve data from Dune Analytics: %s", response.text)
         send_message(chat_id, "Failed to retrieve data from Dune Analytics.")
 
     return 'ok'
@@ -68,7 +72,7 @@ def send_message(chat_id, text):
     url = f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage'
     payload = {'chat_id': chat_id, 'text': text}
     requests.post(url, json=payload)
-
+    logging.info("Telegram API response: %s", response.json())  # Log Telegram API response
 
 # In[17]:
 
